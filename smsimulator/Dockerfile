@@ -1,4 +1,5 @@
 # Notes: docker build -t sl7-ssh . && docker run --env="DISPLAY" --volume="$HOME/.Xauthority:/root/.Xauthority:rw" -p 2222:22 -d --name sl7-container sl7-ssh && docker ps --all
+# 
 
 # Use the Scientific Linux 7 base image
     FROM sl:7
@@ -21,47 +22,9 @@
     ENV PATH=/root/cmake_v3.8/cmake_install/bin:$PATH
     RUN echo "export PATH=/root/cmake_v3.8/cmake_install/bin:\$PATH" >> /root/.bashrc
 
-# # Manually add GCC v4.9.3
-# RUN yum groupinstall -y 'Development Tools'
-# RUN yum install -y gmp-devel mpfr-devel libmpc-devel
-# RUN mkdir -p /root/gcc_v4.9.3
-# WORKDIR /root/gcc_v4.9.3
-# RUN wget http://ftp.gnu.org/gnu/gcc/gcc-4.9.3/gcc-4.9.3.tar.gz
-# RUN tar -xzf gcc-4.9.3.tar.gz
-# RUN rm gcc-4.9.3.tar.gz
-# RUN mkdir /root/gcc_v4.9.3/gcc-4.9.3/build
-# WORKDIR /root/gcc_v4.9.3/gcc-4.9.3/build
-# RUN ../configure --enable-languages=c,c++ --disable-multilib --prefix=/root/gcc_v4.9.3/install
-# RUN make -j$(nproc) && make install
-# RUN export CC=/root/gcc_v4.9.3/install/bin/gcc
-# RUN export CXX=/root/gcc_v4.9.3/install/bin/g++
-# RUN export PATH=/root/gcc_v4.9.3/install/bin/:$PATH
-# RUN export LD_LIBRARY_PATH=/root/gcc_v4.9.3/install/lib:/root/gcc_v4.9.3/install/lib64:/root/gcc_v4.9.3/install/libexec:$LD_LIBRARY_PATH
-# RUN echo "export PATH=/root/gcc_v4.9.3/install/bin/:\$PATH" >> /root/.bashrc
-# RUN echo "export CC=/root/gcc_v4.9.3/install/bin/gcc" >> /root/.bashrc
-# RUN echo "export CXX=/root/gcc_v4.9.3/install/bin/g++" >> /root/.bashrc
-# RUN echo "export LD_LIBRARY_PATH=/root/gcc_v4.9.3/install/lib:/root/gcc_v4.9.3/install/lib64:/root/gcc_v4.9.3/install/libexec:\$LD_LIBRARY_PATH" >> /root/.bashrc
-
-# RUN mkdir -p /root/gcc_v5.5.0
-# WORKDIR /root/gcc_v5.5.0
-# RUN wget http://ftp.gnu.org/gnu/gcc/gcc-5.5.0/gcc-5.5.0.tar.gz
-# RUN tar -xzf gcc-5.5.0.tar.gz
-# RUN rm gcc-5.5.0.tar.gz
-# RUN mkdir /root/gcc_v5.5.0/gcc-5.5.0/build
-# WORKDIR /root/gcc_v5.5.0/gcc-5.5.0/build
-# RUN ../configure --enable-languages=c,c++ --disable-multilib --prefix=/root/gcc_v5.5.0/install
-# RUN make -j$(nproc) && make install
-# RUN export CC=/root/gcc_v5.5.0/install/bin/gcc
-# RUN export CXX=/root/gcc_v5.5.0/install/bin/g++
-# RUN export PATH=/root/gcc_v5.5.0/install/bin/:$PATH
-# RUN export LD_LIBRARY_PATH=/root/gcc_v5.5.0/install/lib:/root/gcc_v5.5.0/install/lib64:/root/gcc_v5.5.0/install/libexec:$LD_LIBRARY_PATH
-# RUN echo "export PATH=/root/gcc_v5.5.0/install/bin/:\$PATH" >> /root/.bashrc
-# RUN echo "export CC=/root/gcc_v5.5.0/install/bin/gcc" >> /root/.bashrc
-# RUN echo "export CXX=/root/gcc_v5.5.0/install/bin/g++" >> /root/.bashrc
-# RUN echo "export LD_LIBRARY_PATH=/root/gcc_v5.5.0/install/lib:/root/gcc_v5.5.0/install/lib64:/root/gcc_v5.5.0/install/libexec:\$LD_LIBRARY_PATH" >> /root/.bashrc
-
 # ROOT dependency for lib/libXMLIO.* and TDOMParser.h
     RUN yum install -y libxml2-devel
+
 # Compile and install root
     RUN mkdir -p /root/root_v5/build /root/root_v5/install
     RUN git clone --branch v5-34-00-patches --depth=1 https://github.com/root-project/root.git /root/root_v5/src
@@ -81,7 +44,6 @@
     ENV SHLIB_PATH=/root/root_v5/install/lib
     ENV CMAKE_PREFIX_PATH=/root/root_v5/install
     ENV _=/usr/bin/env
-
 
 # Install GEANT4 v10
     RUN mkdir -p /root/geant4_v10/install /root/geant4_v10/build
@@ -186,21 +148,13 @@
         RUN echo "LD_LIBRARY_PATH=/root/geant4_v10/install/lib64:/root/root_v5/install/lib:/root/anaroot_v4.5.39/anaroot/lib:/root/smsimulator/smsimulator5.5/smg4lib/lib:/root/smsimulator/smsimulator5.5/lib:/home/kondo/work/geant/anaroot/anaroot_v4.5.36/lib" >> /root/.bashrc
         RUN echo "LIBRARY_PATH=/root/smsimulator/smsimulator5.5/smg4lib/lib" >> /root/.bashrc
 
-    # RUN sed -i 's|^include.*|include /root/geant4_v10/install/share/Geant4-10.5.1/geant4make/config/binmake.gmk|' /root/smsimulator/smsimulator5.5/smg4lib/GNUmakefile.in
     WORKDIR /root/smsimulator/smsimulator5.5/smg4lib
     RUN make -j$(nproc)
     WORKDIR /root/smsimulator/smsimulator5.5/simdayone
-    # DONT USE -j<something> for making simdayone!!!
+    # DONT USE -j<something> for making simdayone!!! make craps out for some reason, about some .o file in ../tmp
     RUN make
     RUN cp -r /root/smsimulator/smsimulator5.5/work /root/smsimulator/
     WORKDIR /root/smsimulator/work
-
-# # $ source setup.sh
-# # $ cd smg4lib
-# # $ make
-# # $ cd ../simtrace
-# # $ make
-# # ... (same for simdayone, get_pdgmass, crosssection, ...)
 
 # # Install necessary packages and enable EPEL repository for htop
 # #RUN yum update -y && yum install -y epel-release && yum clean all && yum install -y htop
