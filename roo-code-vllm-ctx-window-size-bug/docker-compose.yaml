@@ -1,0 +1,19 @@
+services:
+  vllm-cpu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime                  # skip keeping the build layers
+    ports:
+      - "8002:8000"
+    environment:
+      VLLM_CPU_KVCACHE_SPACE: "2"
+      VLLM_CPU_OMP_THREADS_BIND: "auto"  # let vLLM pick NUMA-aware binding
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    command: >
+      --model TinyLlama/TinyLlama-1.1B-Chat-v1.0
+      --dtype bfloat16
+      --max-model-len 1024
+      --tensor-parallel-size 1
+      --trust-remote-code
